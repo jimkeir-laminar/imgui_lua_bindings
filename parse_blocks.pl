@@ -52,6 +52,8 @@ sub parse_blocks {
   my $lastline;
   my $curBlock;
   while (my $line = <STDIN>) {
+	$line =~ s/\r//g;
+
 	if (does_line_match_begin_block($line)) {
 		push @blocknames, $lastline;
 		$curBlock = "";
