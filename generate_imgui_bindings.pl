@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use diagnostics;
+#use diagnostics;
 
 # This works for IMGUI 1.60 and does not get all functions
 #
@@ -271,15 +271,25 @@ sub generateImguiGeneric {
             push(@before, "IM_VEC_4_ARG($name)");
           }
           push(@funcArgs, $name);
-          # one of the various enums
+          # one of the various generic enums
           # we are handling these as ints
-        } elsif ($args[$i] =~ m/^ *(ImGuiWindowFlags|ImGuiCol|ImGuiStyleVar|ImGuiKey|ImGuiAlign|ImGuiColorEditMode|ImGuiMouseCursor|ImGuiSetCond|ImGuiInputTextFlags|ImGuiSelectableFlags) ([^ ]*)( = 0|) *$/) {
+        } elsif ($args[$i] =~ m/^ *(ImGuiWindowFlags|ImGuiCol|ImGuiStyleVar|ImGuiAlign|ImGuiColorEditMode|ImGuiMouseCursor|ImGuiSetCond|ImGuiInputTextFlags|ImGuiSelectableFlags) ([^ ]*)( = 0|) *$/) {
          #These are ints
          my $name = $2;
           if ($3 =~ m/^ = 0$/) {
             push(@before, "OPTIONAL_INT_ARG($name, 0)");
           } else {
             push(@before, "INT_ARG($name)");
+          }
+          push(@funcArgs, $name);
+          # one of the various typed enums
+        } elsif ($args[$i] =~ m/^ *(ImGuiKey|ImGuiDir|ImGuiMouseSource|ImGuiSortDirection) ([^ ]*)( = 0|) *$/) {
+         my $name = $2;
+         my $ename = $1;
+          if ($3 =~ m/^ = 0$/) {
+            push(@before, "OPTIONAL_ENUM_ARG($name, $ename, 0)");
+          } else {
+            push(@before, "ENUM_ARG($name, $ename)");
           }
           push(@funcArgs, $name);
           #int with default value or not

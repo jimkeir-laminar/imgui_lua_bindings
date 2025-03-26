@@ -170,6 +170,15 @@ static int impl_##name(lua_State *L) { \
 #define INT_ARG(name) \
   const int name = (int)luaL_checknumber(L, arg++);
 
+#define OPTIONAL_ENUM_ARG(name, ename, otherwise)\
+  ename name = otherwise; \
+  if (arg <= max_args) { \
+    name = static_cast<ename>(lua_tonumber(L, arg++)); \
+  }
+
+#define ENUM_ARG(name, ename) \
+  const ename name = static_cast<ename>(luaL_checknumber(L, arg++));
+
 #define OPTIONAL_UINT_ARG(name, otherwise)\
   unsigned int name = otherwise; \
   if (arg <= max_args) { \
@@ -327,6 +336,10 @@ static const struct luaL_Reg imguilib [] = {
 #define OPTIONAL_INT_ARG(name, otherwise)
 #undef INT_ARG
 #define INT_ARG(name)
+#undef OPTIONAL_ENUM_ARG
+#define OPTIONAL_ENUM_ARG(name, ename, otherwise)
+#undef ENUM_ARG
+#define ENUM_ARG(name, ename)
 #undef OPTIONAL_UINT_ARG
 #define OPTIONAL_UINT_ARG(name, otherwise)
 #undef UINT_ARG
