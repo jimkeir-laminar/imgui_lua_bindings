@@ -17,9 +17,11 @@ extern "C" {
 // to keep track of end and begins and clean up the imgui stack
 // if lua errors
 
-
+// If you want to pass lua_State to the functions then define this value at the project level.
+#ifndef LUA_BINDINGS_LOCAL_STATE
 // define this global before you call RunString or LoadImGuiBindings
 lua_State* lState;
+#endif
 
 #ifdef ENABLE_IM_LUA_END_STACK
 // Stack for imgui begin and end
@@ -40,9 +42,13 @@ static void ImEndStack(int type);
 
 // Example lua run string function
 // returns NULL on success and error string on error
-const char * RunString(const char* szLua) {
+const char * RunString(
+#if LUA_BINDINGS_LOCAL_STATE
+    lua_State* lState, 
+#endif
+    const char* szLua) {
   if (!lState) {
-    fprintf(stderr, "You didn't assign the global lState, either assign that or refactor LoadImguiBindings and RunString\n");
+    fprintf(stderr, "You didn't pass a valid lState, either assign that or refactor LoadImguiBindings and RunString\n");
   }
 
   int iStatus = luaL_loadstring(lState, szLua);
@@ -398,7 +404,7 @@ static const struct luaL_Reg imguilib [] = {
 #define END_ENUM(name)
 
 #include "imgui_iterator.inl"
-  {"Button", impl_Button},
+//  {"Button", impl_Button},
   {NULL, NULL}
 };
 
@@ -510,7 +516,7 @@ static void PushImguiEnums(lua_State* lState, const char* tableName) {
 };
 
 
-void LoadImguiBindings() {
+void LoadImguiBindings(lua_State* lState) {
   if (!lState) {
     fprintf(stderr, "You didn't assign the global lState, either assign that or refactor LoadImguiBindings and RunString\n");
   }
