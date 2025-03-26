@@ -34,10 +34,7 @@ sub does_line_match_end_block {
 
   # Make sure you take into account random whitespace that could happen by using [ ]*[\t]*
   my $match = 0;
-  $match |= $line =~ m/^};[ ]*[\t]*\/\//;  # Semicolon,    comment
-  $match |= $line =~ m/^};[ ]*[\t]*$/;     # Semicolon,    no comment
-  $match |= $line =~ m/^}[ ]*[\t]*\/\//;   # No semicolon, comment
-  $match |= $line =~ m/^}[ ]*[\t]*$/;      # No semicolon, no comment
+  $match |= $line =~ m/^};?\s*(\/\/)?/;
   return $match;
 }
 
@@ -45,7 +42,7 @@ sub does_line_match_begin_block {
   my $line = shift;
 
   my $match = 0;
-  $match |= $line =~ m/^{[ ]*[\t]*$/;
+  $match |= $line =~ m/^{\s*$/;
   return $match
 }
 
