@@ -13,7 +13,8 @@ use warnings;
 require "./parse_blocks.pl";
 
 sub generateNamespaceImgui {
-  my ($imguiCodeBlock) = @_;
+  my $imguiCodeBlock = $_[0];
+  my @knownEnums = @{$_[1]};
 
   my $lineCaptureRegex = qr" *(IMGUI_API) *((const char\*)|([^ ]+)) *([^\(]+)\(([^\;]*)\);";
   my $doEndStackOptions = 1;
@@ -64,11 +65,13 @@ sub generateNamespaceImgui {
     \%changeN,
     \%endN,
     \%endOverride,
+    \@knownEnums,
     $imguiCodeBlock)
 }
 
 sub generateDrawListFunctions {
-  my ($imguiCodeBlock) = @_;
+  my $imguiCodeBlock = $_[0];
+  my @knownEnums = @{$_[1]};
 
   my $lineCaptureRegex = qr" *(IMGUI_API|inline) *((const char\*)|([^ ]+)) *([^\(]+)\(([^\;]*)\);";
   my $doEndStackOptions = 0;
@@ -108,6 +111,7 @@ sub generateDrawListFunctions {
     \%changeN,
     \%endN,
     \%endOverride,
+    \@knownEnums,
     $imguiCodeBlock)
 }
 
@@ -137,7 +141,8 @@ sub generateImguiGeneric {
   my %endN = %{$endNRef};
   my $endOverrideRef = shift;
   my %endOverride = %{$endOverrideRef};
-
+  my $myKnownEnums = shift;
+  my $knownEnums = join("|", @{$myKnownEnums});
   my ($imguiCodeBlock) = @_;
 
 
@@ -271,18 +276,6 @@ sub generateImguiGeneric {
             push(@before, "IM_VEC_4_ARG($name)");
           }
           push(@funcArgs, $name);
-          # one of the various generic enums
-          # we are handling these as ints
-        } elsif ($args[$i] =~ m/^ *(ImGuiWindowFlags|ImGuiCol|ImGuiStyleVar|ImGuiAlign|ImGuiColorEditMode|ImGuiMouseCursor|ImGuiSetCond|ImGuiInputTextFlags|ImGuiSelectableFlags) ([^ ]*)( = 0|) *$/) {
-         #These are ints
-         my $name = $2;
-          if ($3 =~ m/^ = 0$/) {
-            push(@before, "OPTIONAL_INT_ARG($name, 0)");
-          } else {
-            push(@before, "INT_ARG($name)");
-          }
-          push(@funcArgs, $name);
-          # one of the various typed enums
         } elsif ($args[$i] =~ m/^ *(ImGuiKey|ImGuiDir|ImGuiMouseSource|ImGuiSortDirection) ([^ ]*)( = 0|) *$/) {
          my $name = $2;
          my $ename = $1;
@@ -292,6 +285,18 @@ sub generateImguiGeneric {
             push(@before, "ENUM_ARG($name, $ename)");
           }
           push(@funcArgs, $name);
+          # one of the various generic enums
+          # we are handling these as ints
+        } elsif ($args[$i] =~ m/^ *($knownEnums) ([^ ]*)( = 0|) *$/) {
+         #These are ints
+         my $name = $2;
+          if ($3 =~ m/^ = 0$/) {
+            push(@before, "OPTIONAL_INT_ARG($name, 0)");
+          } else {
+            push(@before, "INT_ARG($name)");
+          }
+          push(@funcArgs, $name);
+          # one of the various typed enums
           #int with default value or not
         } elsif ($args[$i] =~ m/^ *int ([^ =\[]*)( = [^ ]*|) *$/) {
           my $name = $1;
@@ -472,17 +477,27 @@ my @blocknames = @$blocknamesref;
 # splits up its header to multiple instances of namespace ImGui, this would break.
 my $alreadyParsedMainImguiNamespace = 0;
 
+my @knownEnums = ();
+for (my $i=0; $i < scalar @blocks; $i++) {
+  if ($blocknames[$i] =~ m/enum ImGui([\w_]*)_\n/) {
+	push @knownEnums, "ImGui" . $1;
+  }
+}
+
 for (my $i=0; $i < scalar @blocks; $i++) {
   print "//" . $blocknames[$i] . "\n";
+
   if (($blocknames[$i] eq "namespace ImGui\n") and not $alreadyParsedMainImguiNamespace) {
 	$alreadyParsedMainImguiNamespace = 1;
-    generateNamespaceImgui($blocks[$i]);
+    generateNamespaceImgui($blocks[$i], \@knownEnums);
   }
-  if ($blocknames[$i] =~ m/enum ImGui(.*)_\n/) {
+
+  if ($blocknames[$i] =~ m/enum ImGui([\w_]*)_\n/) {
     generateEnums($1, $blocks[$i]);
   }
+
   if ($blocknames[$i] eq "struct ImDrawList\n") {
-    generateDrawListFunctions($blocks[$i]);
+    generateDrawListFunctions($blocks[$i], \@knownEnums);
   }
 }
 
