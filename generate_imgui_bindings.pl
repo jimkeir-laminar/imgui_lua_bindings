@@ -201,9 +201,13 @@ sub generateImguiGeneric {
         $callMacro = "${callPrefix}CALL_FUNCTION";
         push(@funcArgs, "bool");
         push(@after, "PUSH_BOOL(ret)");
-      } elsif ($retType =~ /^float$/) {
+      } elsif ($retType =~ /^(float|int|unsigned\s+int|double)$/) {
         $callMacro = "${callPrefix}CALL_FUNCTION";
-        push(@funcArgs, "float");
+        push(@funcArgs, "$1");
+        push(@after, "PUSH_NUMBER(ret)");
+      } elsif ($knownEnums ne "" && $retType =~ /^($knownEnums)$/) {
+        $callMacro = "${callPrefix}CALL_FUNCTION";
+        push(@funcArgs, "$1");
         push(@after, "PUSH_NUMBER(ret)");
       } elsif ($retType =~ /^ImVec2$/) {
         $callMacro = "${callPrefix}CALL_FUNCTION";
@@ -236,7 +240,7 @@ sub generateImguiGeneric {
           push(@funcArgs, $name);
           push(@after, "END_FLOAT_POINTER($name)");
           #float a or float a = number
-        } elsif ($args[$i] =~ m/^ *float *([^ =\[]*)( *= *[^ ]*|)$/) {
+        } elsif ($args[$i] =~ m/^ *(?:float|double) *([^ =\[]*)( *= *[^ ]*|)$/) {
           my $name = $1;
           if ($2 =~ m/^ *= *([^ ]*)$/) {
             push(@before, "OPTIONAL_NUMBER_ARG($name, $1)");
