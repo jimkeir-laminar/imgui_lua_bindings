@@ -3,7 +3,7 @@ use strict;
 use warnings;
 #use diagnostics;
 
-# This works for IMGUI 1.60 and does not get all functions
+# This works for IMGUI 1.91.9b and does not get all functions; 292 are supported.
 #
 # to use ./generate_imgui_bindings.pl <../imgui/imgui.h >imgui_iterator.inl
 # and define macros properly as in example imgui_lua_bindings.cpp
@@ -16,7 +16,7 @@ sub generateNamespaceImgui {
   my $imguiCodeBlock = $_[0];
   my @knownEnums = @{$_[1]};
 
-  my $lineCaptureRegex = qr" *(IMGUI_API) *((const char\*)|([^ ]+)) *([^\(]+)\(([^\;]*)\);";
+  my $lineCaptureRegex = qr" *(IMGUI_API) *((const char\*)|([^ ]+)) *([^\(]+)\(([^\;]*)\)\s*;";
   my $doEndStackOptions = 1;
   my $terminator = "} \/\/ namespace ImGui";
   my $callPrefix = "";
@@ -159,7 +159,8 @@ sub generateImguiGeneric {
     $line =~ s/ImVec4\(([^,]*),([^\)]*),([^\)]*),([^\)]*)\)/ImVec4 $1 $2 $3 $4/g;
 
     #delete this so it's eaiser for regexes
-    $line =~ s/ IM_PRINTFARGS\(.\);/;/g;
+    $line =~ s/ IM_[A-Z]+[ARGS|LIST]\(.\);/;/g;
+
     if ($line =~ m/$lineCaptureRegex/) {
       print "//" . $line . "\n";
       # this will be set to 0 if something is not supported yet
@@ -356,7 +357,7 @@ sub generateImguiGeneric {
           push(@after, "END_UINT_POINTER($name)");
           # we don't support variadic functions yet but we let you use it without extra variables
         } elsif ($args[$i] =~ m/^ *\.\.\. *$/) {
-          print "// Variadic functions aren't suppported but here it is anyway\n";
+          print "// Variadic functions aren't supported but here it is anyway\n";
         } else {
           print "// Unsupported arg type " . $args[$i] . "\n";
           $shouldPrint = 0;
