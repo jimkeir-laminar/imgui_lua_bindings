@@ -287,22 +287,22 @@ sub generateImguiGeneric {
             push(@before, "IM_VEC_4_ARG($name)");
           }
           push(@funcArgs, $name);
-        } elsif ($args[$i] =~ m/^ *(ImGuiKey|ImGuiDir|ImGuiMouseSource|ImGuiSortDirection) ([^ ]*)( = 0|) *$/) {
+        } elsif ($args[$i] =~ m/^\s*(ImGuiKey|ImGuiDir|ImGuiMouseSource|ImGuiSortDirection)\s+(\w+)\s*(=\s*\w+|) *$/) {
          my $name = $2;
          my $ename = $1;
-          if ($3 =~ m/^ = 0$/) {
-            push(@before, "OPTIONAL_ENUM_ARG($name, $ename, 0)");
+          if ($3 =~ m/^=\s*(\w+)$/) {
+            push(@before, "OPTIONAL_ENUM_ARG($name, $ename, $1)");
           } else {
             push(@before, "ENUM_ARG($name, $ename)");
           }
           push(@funcArgs, $name);
           # one of the various generic enums
           # we are handling these as ints
-        } elsif ($args[$i] =~ m/^ *($knownEnums) ([^ ]*)( = 0|) *$/) {
+        } elsif ($args[$i] =~ m/^ *($knownEnums)\s+(\w+)\s*(=\s*\w+|)\s*$/) {
          #These are ints
          my $name = $2;
-          if ($3 =~ m/^ = 0$/) {
-            push(@before, "OPTIONAL_INT_ARG($name, 0)");
+          if ($3 =~ m/^=\s*(\w+)$/) {
+            push(@before, "OPTIONAL_INT_ARG($name, $1)");
           } else {
             push(@before, "INT_ARG($name)");
           }
