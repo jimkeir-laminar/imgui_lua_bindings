@@ -214,6 +214,13 @@ sub generateImguiGeneric {
         push(@funcArgs, "ImVec2");
         push(@after, "PUSH_NUMBER(ret.x)");
         push(@after, "PUSH_NUMBER(ret.y)");
+      } elsif ($retType =~ /^ImVec4$/) {
+        $callMacro = "${callPrefix}CALL_FUNCTION";
+        push(@funcArgs, "ImVec4");
+        push(@after, "PUSH_NUMBER(ret.x)");
+        push(@after, "PUSH_NUMBER(ret.y)");
+        push(@after, "PUSH_NUMBER(ret.z)");
+        push(@after, "PUSH_NUMBER(ret.w)");
       } elsif ($retType =~ /^(unsigned int|ImGuiID|ImU32)$/) {
         $callMacro = "${callPrefix}CALL_FUNCTION";
         push(@funcArgs, "unsigned int");
